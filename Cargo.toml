@@ -1,0 +1,9 @@
+[package]
+name = "rosbag"
+version = "0.1.0"
+authors = ["newpavlov <newpavlov@gmail.com>"]
+
+[dependencies]
+byteorder = "1"
+log = "0.4"
+hex = "0.3"
