@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 use byteorder::{LE, ReadBytesExt};
 use super::{Result, Error};
 
@@ -10,6 +10,7 @@ use field_iter::FieldIterator;
 
 const BUF_SIZE: usize = 128;
 
+/// Enum with all possible record variants
 #[derive(Debug, Clone)]
 pub enum Record {
     BagHeader(BagHeader),
@@ -40,7 +41,7 @@ fn read_opt<R: Read, F, T>(mut r: R, f: F) -> Result<T>
 }
 
 impl Record {
-    pub fn next_record<R: Read>(mut r: R) -> Result<Self> {
+    pub fn next_record<R: Read + Seek>(mut r: R) -> Result<Self> {
         read_opt(&mut r, |buf, r| {
             let f = FieldIterator::new(buf)
                 .find(|v| match v {

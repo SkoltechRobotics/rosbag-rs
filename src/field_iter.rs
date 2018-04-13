@@ -3,6 +3,7 @@ use std::str;
 use std::iter::Iterator;
 use super::{Result, Error};
 
+/// Iterator which goes over record header fields
 pub(crate) struct FieldIterator<'a> {
     buf: &'a [u8],
 }
@@ -17,6 +18,8 @@ impl<'a> Iterator for FieldIterator<'a> {
     type Item = Result<(&'a str, &'a [u8])>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.buf.len() == 0 { return None; }
+
         if self.buf.len() < 4 { return Some(Err(Error::InvalidHeader)); }
         let n = LE::read_u32(&self.buf[..4]) as usize;
         self.buf = &self.buf[4..];
