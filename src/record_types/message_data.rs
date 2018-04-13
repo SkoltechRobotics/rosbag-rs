@@ -13,7 +13,7 @@ pub struct MessageData {
     pub data: Vec<u8>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct MessageDataHeader {
     pub conn_id: Option<u32>,
     pub time: Option<u64>,

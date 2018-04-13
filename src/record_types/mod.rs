@@ -1,4 +1,4 @@
-//! Collection of ROS bag record types.
+//! Collection of record types.
 use std::io::{Read, Seek};
 use super::{Result, Error};
 
@@ -8,7 +8,7 @@ mod chunk;
 pub use self::chunk::{Chunk, Compression};
 pub(crate) mod message_data;
 pub use self::message_data::MessageData;
-mod connection;
+pub(crate) mod connection;
 pub use self::connection::Connection;
 mod index_data;
 pub use self::index_data::{IndexData, IndexDataEntry};

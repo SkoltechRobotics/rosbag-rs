@@ -1,6 +1,6 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, read_to_vec, set_field_u32};
-use msg_iter::ChunkMessagesIterator;
+use msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 use std::io::{Read, Seek};
 
 /// Compression options for `Chunk` data.
@@ -30,8 +30,14 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn iter(&self) -> ChunkMessagesIterator {
+    /// Get iterator over only messages
+    pub fn iter_msgs(&self) -> ChunkMessagesIterator {
         ChunkMessagesIterator::new(&self.data)
+    }
+
+    /// Get iterator over all internall records.
+    pub fn iter(&self) -> ChunkRecordsIterator {
+        ChunkRecordsIterator::new(&self.data)
     }
 }
 

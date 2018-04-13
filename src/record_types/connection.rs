@@ -32,15 +32,14 @@ pub struct Connection {
 
 #[derive(Default, Debug)]
 pub(crate) struct ConnectionHeader {
-    id: Option<u32>,
-    storage_topic: Option<String>,
+    pub id: Option<u32>,
+    pub storage_topic: Option<String>,
 }
 
 impl RecordGen for Connection {
     type Header = ConnectionHeader;
 
     fn parse_data<R: Read + Seek>(mut r: R, header: Self::Header) -> Result<Self> {
-        println!("{:?}", header);
         let id = header.id.ok_or(Error::InvalidHeader)?;
         let storage_topic = header.storage_topic.ok_or(Error::InvalidHeader)?;
 

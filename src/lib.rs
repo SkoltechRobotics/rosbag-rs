@@ -1,4 +1,35 @@
 //! Utilities for reading ROS bag files.
+//!
+//! # Example
+//! ```ignore
+//! use rosbag::{RecordsIterator, Record};
+//!
+//! let mut bag = RecordsIterator::new(path).unwrap();
+//! let header = match bag.next() {
+//!     Some(Ok(Record::BagHeader(bh))) => bh,
+//!     _ => panic!("Failed to acquire bag header record"),
+//! };
+//! // get first chunk and iterate over messages in it
+//! for record in &mut bag {
+//!     let record = record.unwrap();
+//!     match record {
+//!         Record::Chunk(chunk) => {
+//!             for msg in chunk.iter_msgs() {
+//!                 let msg = msg.unwrap();
+//!                 println!("{}", msg.time)
+//!             }
+//!             break;
+//!         },
+//!         _ => (),
+//!     }
+//! }
+//! // jump to index records
+//! bag.seek(header.index_pos).unwrap();
+//! for record in bag {
+//!     let record = record.unwrap();
+//!     println!("{:?}", record);
+//! }
+//! ```
 extern crate byteorder;
 extern crate hex;
 #[macro_use] extern crate log;
@@ -14,11 +45,10 @@ const VERSION_STRING: &'static str = "#ROSBAG V2.0\n";
 
 mod record;
 mod field_iter;
-mod msg_iter;
+pub mod msg_iter;
 pub mod record_types;
 
 pub use record::Record;
-pub use msg_iter::{ChunkMessagesIterator, MessageDataRef};
 
 /// Low-level iterator over records extracted from ROS bag file.
 pub struct RecordsIterator {
@@ -57,13 +87,13 @@ impl RecordsIterator {
 
     /// Jump to the given position in the file.
     ///
-    /// Be carefull to jump only to records beginning (e.g. to position listed
+    /// Be carefull to jump only to record beginnings (e.g. to position listed
     /// in `BagHeader` or `ChunkInfo` records), as incorrect offset position
     /// will result in error on the next iteration and in the worst case
     /// scenario to a long blocking (programm will try to read a huge chunk of
     /// data).
-    pub fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
-        self.file.seek(pos)
+    pub fn seek(&mut self, pos: u64) -> io::Result<u64> {
+        self.file.seek(SeekFrom::Start(pos))
     }
 }
 

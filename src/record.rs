@@ -15,10 +15,7 @@ const BUF_SIZE: usize = 128;
 pub enum Record {
     BagHeader(BagHeader),
     Chunk(Chunk),
-    // using `Box` results in a double indirection for `Connection`, but allows
-    // to reduce size of the `Record` from 128 bytes to 64, considering
-    // `Connection` rarity it's a good trade-off
-    Connection(Box<Connection>),
+    Connection(Connection),
     MessageData(MessageData),
     IndexData(IndexData),
     ChunkInfo(ChunkInfo),
@@ -56,8 +53,7 @@ impl Record {
                 IndexData::OP => Record::IndexData(IndexData::read(buf, r)?),
                 Chunk::OP => Record::Chunk(Chunk::read(buf, r)?),
                 ChunkInfo::OP => Record::ChunkInfo(ChunkInfo::read(buf, r)?),
-                Connection::OP =>
-                    Record::Connection(Box::new(Connection::read(buf, r)?)),
+                Connection::OP => Record::Connection(Connection::read(buf, r)?),
                 MessageData::OP =>
                     Record::MessageData(MessageData::read(buf, r)?),
                 BagHeader::OP => Record::BagHeader(BagHeader::read(buf, r)?),
