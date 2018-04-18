@@ -77,6 +77,7 @@ pub struct ChunkInfoEntry {
     pub count: u32,
 }
 
+/// Iterator over `ChunkInfo` entries
 pub struct ChunkInfoEntriesIterator<'a> {
     cursor: Cursor<'a>,
 }

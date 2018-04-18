@@ -68,6 +68,7 @@ pub struct IndexDataEntry {
     pub offset: u32,
 }
 
+/// Iterator over `IndexData` entries
 pub struct IndexDataEntriesIterator<'a> {
     cursor: Cursor<'a>,
 }

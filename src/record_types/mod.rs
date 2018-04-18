@@ -12,9 +12,9 @@ pub use self::message_data::MessageData;
 pub(crate) mod connection;
 pub use self::connection::Connection;
 mod index_data;
-pub use self::index_data::{IndexData, IndexDataEntry};
+pub use self::index_data::{IndexData, IndexDataEntry, IndexDataEntriesIterator};
 mod chunk_info;
-pub use self::chunk_info::{ChunkInfo, ChunkInfoEntry};
+pub use self::chunk_info::{ChunkInfo, ChunkInfoEntry, ChunkInfoEntriesIterator};
 
 pub(crate) mod utils;
 use self::utils::{read_record, check_op};
