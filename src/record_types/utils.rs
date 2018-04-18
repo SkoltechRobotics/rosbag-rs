@@ -63,11 +63,10 @@ pub(super) fn set_field_u32(field: &mut Option<u32>, val: &[u8]) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn set_field_string(field: &mut Option<String>, val: &[u8]) -> Result<()> {
+pub(crate) fn set_field_str<'a>(field: &mut Option<&'a str>, val: &'a [u8]) -> Result<()> {
     if field.is_some() { Err(Error::InvalidHeader)? }
     *field = Some(str::from_utf8(val)
-        .map_err(|_| Error::InvalidHeader)?
-        .to_string());
+        .map_err(|_| Error::InvalidHeader)?);
     Ok(())
 }
 

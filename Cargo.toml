@@ -1,6 +1,6 @@
 [package]
 name = "rosbag"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Artyom Pavlov <newpavlov@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "Utilities for reading ROS bag files."
@@ -12,3 +12,4 @@ keywords = ["ros", "datasets", "robotics"]
 byteorder = "1"
 log = "0.4"
 hex = "0.3"
+memmap = "0.6"

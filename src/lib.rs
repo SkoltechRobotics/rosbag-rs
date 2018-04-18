@@ -33,26 +33,33 @@
 extern crate byteorder;
 extern crate hex;
 #[macro_use] extern crate log;
+extern crate memmap;
 
 use std::fs::File;
 use std::path::Path;
 use std::{result, str};
 use std::convert::From;
 use std::iter::Iterator;
-use std::io::{self, BufReader, Read, ErrorKind, Seek, SeekFrom};
+use std::io::{self, Read};
 
-const VERSION_STRING: &'static str = "#ROSBAG V2.0\n";
+use memmap::Mmap;
+
+const VERSION_STRING: &str = "#ROSBAG V2.0\n";
 
 mod record;
 mod field_iter;
+mod cursor;
 pub mod msg_iter;
 pub mod record_types;
 
 pub use record::Record;
 
+use cursor::{Cursor, OutOfBounds};
+
+
 /// Low-level iterator over records extracted from ROS bag file.
-pub struct RecordsIterator {
-    file: BufReader<File>,
+pub struct RosBag {
+    data: Mmap,
 }
 
 /// The error type for ROS bag file reading and parsing.
@@ -61,6 +68,7 @@ pub enum Error {
     InvalidHeader,
     InvalidRecord,
     UnsupportedVersion,
+    OutOfBounds,
     Io(io::Error),
 }
 
@@ -70,21 +78,41 @@ impl From<io::Error> for Error {
     }
 }
 
+impl From<OutOfBounds> for Error {
+    fn from(_: OutOfBounds) -> Error {
+        Error::OutOfBounds
+    }
+}
+
 /// A specialized Result type for ROS bag file reading and parsing.
 pub type Result<T> = result::Result<T, Error>;
 
-impl RecordsIterator {
+impl RosBag {
     /// Create a new iterator over provided path to ROS bag file.
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let mut file = BufReader::new(File::open(path)?);
+    pub fn new<P: AsRef<Path>>(path: P) -> io::Result<Self> {
+        let mut file = File::open(path)?;
         let mut buf = [0u8; 13];
         file.read_exact(&mut buf)?;
         if &buf != VERSION_STRING.as_bytes() {
-            return Err(Error::UnsupportedVersion);
+            Err(io::Error::new(io::ErrorKind::InvalidData,
+                "Invalid or unsupported rosbag header"))?;
         }
-        Ok(RecordsIterator { file: file })
+        let data = unsafe { Mmap::map(&file)? };
+        Ok(Self { data })
     }
 
+    pub fn records<'a>(&'a self) -> RecordsIterator<'a> {
+        let mut cursor = Cursor::new(&self.data);
+        cursor.seek(13).expect("13 bytes already have been read");
+        RecordsIterator { cursor }
+    }
+}
+
+pub struct RecordsIterator<'a> {
+    cursor: Cursor<'a>,
+}
+
+impl<'a> RecordsIterator<'a> {
     /// Jump to the given position in the file.
     ///
     /// Be carefull to jump only to record beginnings (e.g. to position listed
@@ -92,19 +120,16 @@ impl RecordsIterator {
     /// will result in error on the next iteration and in the worst case
     /// scenario to a long blocking (programm will try to read a huge chunk of
     /// data).
-    pub fn seek(&mut self, pos: u64) -> io::Result<u64> {
-        self.file.seek(SeekFrom::Start(pos))
+    pub fn seek(&mut self, pos: u64) -> Result<()> {
+        Ok(self.cursor.seek(pos)?)
     }
 }
 
-impl Iterator for RecordsIterator {
-    type Item = Result<Record>;
+impl<'a> Iterator for RecordsIterator<'a> {
+    type Item = Result<Record<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match Record::next_record(&mut self.file) {
-            Err(Error::Io(ref err)) if err.kind() == ErrorKind::UnexpectedEof
-                => None,
-            v => Some(v),
-        }
+        if self.cursor.left() == 0 { return None; }
+        Some(Record::next_record(&mut self.cursor))
     }
 }

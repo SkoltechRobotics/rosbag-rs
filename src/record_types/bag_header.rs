@@ -1,7 +1,7 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u64, set_field_u32};
-use std::io::{Read, SeekFrom, Seek};
-use byteorder::{LE, ReadBytesExt};
+
+use cursor::Cursor;
 
 /// Bag file header record which contains basic information about the file.
 #[derive(Debug, Clone)]
@@ -21,20 +21,21 @@ pub(crate) struct BagHeaderHeader {
     chunk_count: Option<u32>,
 }
 
-impl RecordGen for BagHeader {
+impl<'a> RecordGen<'a> for BagHeader {
     type Header = BagHeaderHeader;
 
-    fn parse_data<R: Read + Seek>(mut r: R, header: Self::Header) -> Result<Self> {
+    fn read_data(c: &mut Cursor, header: Self::Header) -> Result<Self> {
         let index_pos = header.index_pos.ok_or(Error::InvalidHeader)?;
         let conn_count = header.conn_count.ok_or(Error::InvalidHeader)?;
         let chunk_count = header.chunk_count.ok_or(Error::InvalidHeader)?;
-        let n = r.read_u32::<LE>()? as i64;
-        r.seek(SeekFrom::Current(n))?;
+        let n = c.next_u32()? as u64;
+        let p = c.pos();
+        c.seek(p + n)?;
         Ok(BagHeader { index_pos, conn_count, chunk_count } )
     }
 }
 
-impl HeaderGen for BagHeaderHeader {
+impl<'a> HeaderGen<'a> for BagHeaderHeader {
     const OP: u8 = 0x03;
 
     fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
