@@ -46,7 +46,7 @@ impl<'a> RecordGen<'a> for ChunkInfo<'a> {
         if ver != 1 { Err(Error::UnsupportedVersion)? }
         let n = c.next_u32()?;
         if n % 8 != 0 || n/8 != count { Err(Error::InvalidRecord)? }
-        let mut data = c.next_bytes(n as u64)?;
+        let data = c.next_bytes(n as u64)?;
         Ok(Self { ver, chunk_pos, start_time, end_time, data })
     }
 }

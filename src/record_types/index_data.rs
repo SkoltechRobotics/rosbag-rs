@@ -15,6 +15,12 @@ pub struct IndexData<'a> {
     data: &'a [u8],
 }
 
+impl<'a> IndexData<'a> {
+    pub fn entries(&'a self) -> IndexDataEntriesIterator<'a> {
+        IndexDataEntriesIterator { cursor: Cursor::new(&self.data) }
+    }
+}
+
 #[derive(Default)]
 pub(crate) struct IndexDataHeader {
     pub ver: Option<u32>,

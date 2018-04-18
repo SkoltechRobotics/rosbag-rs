@@ -1,5 +1,4 @@
-use std::io::Read;
-use byteorder::{LE, ByteOrder, ReadBytesExt};
+use byteorder::{LE, ByteOrder};
 use super::{Result, Error};
 use std::str;
 
@@ -27,13 +26,6 @@ pub(super) fn read_record(mut header: &[u8]) -> Result<(&[u8], &[u8], &[u8])> {
     let name = &rec[..delim];
     let val = &rec[delim+1..];
     Ok((name, val, header))
-}
-
-pub(super) fn read_to_vec<R: Read>(mut r: R) -> Result<Vec<u8>> {
-    let n = r.read_u32::<LE>()? as usize;
-    let mut buf = vec![0u8; n];
-    r.read_exact(&mut buf)?;
-    Ok(buf)
 }
 
 pub(super) fn unknown_field(name: &[u8], val: &[u8]) {
