@@ -1,22 +1,23 @@
-//! Utilities for reading ROS bag files.
+//! Utilities for efficient reading of ROS bag files.
 //!
 //! # Example
 //! ```ignore
-//! use rosbag::{RecordsIterator, Record};
+//! use rosbag::{RosBag, Record};
 //!
-//! let mut bag = RecordsIterator::new(path).unwrap();
-//! let header = match bag.next() {
+//! let bag = RosBag::new(path).unwrap();
+//! // create low-level iterator over rosbag records
+//! let mut records = bag.records();
+//! // acquire `BagHeader` record, which should be first one
+//! let header = match records.next() {
 //!     Some(Ok(Record::BagHeader(bh))) => bh,
 //!     _ => panic!("Failed to acquire bag header record"),
 //! };
-//! // get first chunk and iterate over messages in it
-//! for record in &mut bag {
-//!     let record = record.unwrap();
-//!     match record {
+//! // get first `Chunk` record and iterate over `Message` records in it
+//! for record in &mut records {
+//!     match record? {
 //!         Record::Chunk(chunk) => {
 //!             for msg in chunk.iter_msgs() {
-//!                 let msg = msg.unwrap();
-//!                 println!("{}", msg.time)
+//!                 println!("{}", msg?.time)
 //!             }
 //!             break;
 //!         },
@@ -24,10 +25,9 @@
 //!     }
 //! }
 //! // jump to index records
-//! bag.seek(header.index_pos).unwrap();
-//! for record in bag {
-//!     let record = record.unwrap();
-//!     println!("{:?}", record);
+//! records.seek(header.index_pos).unwrap();
+//! for record in records {
+//!     println!("{:?}", record?);
 //! }
 //! ```
 extern crate byteorder;
@@ -57,7 +57,7 @@ pub use record::Record;
 use cursor::{Cursor, OutOfBounds};
 
 
-/// Low-level iterator over records extracted from ROS bag file.
+/// Struct which holds open rosbag file.
 pub struct RosBag {
     data: Mmap,
 }
@@ -69,13 +69,6 @@ pub enum Error {
     InvalidRecord,
     UnsupportedVersion,
     OutOfBounds,
-    Io(io::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(val: io::Error) -> Error {
-        Error::Io(val)
-    }
 }
 
 impl From<OutOfBounds> for Error {
@@ -108,6 +101,7 @@ impl RosBag {
     }
 }
 
+/// Low-level iterator over records extracted from ROS bag file.
 pub struct RecordsIterator<'a> {
     cursor: Cursor<'a>,
 }
