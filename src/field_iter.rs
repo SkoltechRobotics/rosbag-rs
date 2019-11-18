@@ -35,7 +35,7 @@ impl<'a> Iterator for FieldIterator<'a> {
                     delim = i;
                     break;
                 },
-                0x20...0x7e => (),
+                0x20..=0x7e => (),
                 _ => return Some(Err(Error::InvalidHeader)),
             }
         }

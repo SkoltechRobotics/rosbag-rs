@@ -38,7 +38,6 @@ extern crate memmap;
 use std::fs::File;
 use std::path::Path;
 use std::{result, str};
-use std::convert::From;
 use std::iter::Iterator;
 use std::io::{self, Read};
 
@@ -49,32 +48,17 @@ const VERSION_STRING: &str = "#ROSBAG V2.0\n";
 mod record;
 mod field_iter;
 mod cursor;
+mod error;
 pub mod msg_iter;
 pub mod record_types;
 
 pub use record::Record;
-
-use cursor::{Cursor, OutOfBounds};
-
+pub use error::Error;
+use cursor::Cursor;
 
 /// Struct which holds open rosbag file.
 pub struct RosBag {
     data: Mmap,
-}
-
-/// The error type for ROS bag file reading and parsing.
-#[derive(Debug)]
-pub enum Error {
-    InvalidHeader,
-    InvalidRecord,
-    UnsupportedVersion,
-    OutOfBounds,
-}
-
-impl From<OutOfBounds> for Error {
-    fn from(_: OutOfBounds) -> Error {
-        Error::OutOfBounds
-    }
 }
 
 /// A specialized Result type for ROS bag file reading and parsing.

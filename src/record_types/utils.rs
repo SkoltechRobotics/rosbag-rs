@@ -18,7 +18,7 @@ pub(super) fn read_record(mut header: &[u8]) -> Result<(&[u8], &[u8], &[u8])> {
                 delim = i;
                 break;
             },
-            0x20...0x7e => (),
+            0x20..=0x7e => (),
             _ => Err(Error::InvalidHeader)?,
         }
     }
