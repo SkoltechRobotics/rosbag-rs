@@ -5,8 +5,8 @@ matrix:
     - rust: 1.32.0
       script: cargo test --verbose
     - rust: stable
-      script: cargo test --verbose --all
+      script: cargo test --verbose
     - rust: nightly
-      script: cargo test --verbose --all
+      script: cargo test --verbose
 
 cache: cargo
