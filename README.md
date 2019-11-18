@@ -1,4 +1,4 @@
-# rosbag-rs [![crates.io](https://img.shields.io/crates/v/rosbag.svg)](https://crates.io/crates/rosbag) [![Documentation](https://docs.rs/rosbag/badge.svg)](https://docs.rs/rosbag)
+# rosbag-rs [![crates.io](https://img.shields.io/crates/v/rosbag.svg)](https://crates.io/crates/rosbag) [![Documentation](https://docs.rs/rosbag/badge.svg)](https://docs.rs/rosbag) [![Build Status](https://travis-ci.org/SkoltechRobotics/rosbag-rs.svg?branch=master)](https://travis-ci.org/SkoltechRobotics/rosbag-rs)
 
 A pure Rust crate for reading ROS bag files.
 
@@ -35,7 +35,7 @@ for record in records {
 
 ## License
 
-Licensed under either of
+The crate is licensed under either of
 
  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
  * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)

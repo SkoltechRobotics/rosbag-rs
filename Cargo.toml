@@ -13,3 +13,6 @@ byteorder = "1"
 log = "0.4"
 hex = "0.3"
 memmap = "0.6"
+
+[badges]
+travis-ci = { repository = "SkoltechRobotics/rosbag-rs" }
