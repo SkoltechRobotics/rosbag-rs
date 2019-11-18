@@ -14,7 +14,9 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn seek(&mut self, pos: u64) -> Result<(), OutOfBounds> {
-        if pos > self.len() { Err(OutOfBounds)? }
+        if pos > self.len() {
+            return Err(OutOfBounds);
+        }
         self.pos = pos;
         Ok(())
     }
@@ -26,7 +28,9 @@ impl<'a> Cursor<'a> {
     pub fn left(&self) -> u64 { self.data.len() as u64 - self.pos() }
 
     pub fn next_bytes(&mut self, n: u64) -> Result<&'a [u8], OutOfBounds> {
-        if self.pos + n > self.len() { Err(OutOfBounds)? }
+        if self.pos + n > self.len() {
+            return Err(OutOfBounds);
+        }
         let s = self.pos as usize;
         self.pos += n;
         Ok(&self.data[s..self.pos as usize])

@@ -30,11 +30,6 @@
 //!     println!("{:?}", record?);
 //! }
 //! ```
-extern crate byteorder;
-extern crate hex;
-#[macro_use] extern crate log;
-extern crate memmap;
-
 use std::fs::File;
 use std::path::Path;
 use std::{result, str};
@@ -70,17 +65,18 @@ impl RosBag {
         let mut file = File::open(path)?;
         let mut buf = [0u8; 13];
         file.read_exact(&mut buf)?;
-        if &buf != VERSION_STRING.as_bytes() {
-            Err(io::Error::new(io::ErrorKind::InvalidData,
-                "Invalid or unsupported rosbag header"))?;
+        if buf != VERSION_STRING.as_bytes() {
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "Invalid or unsupported rosbag header"));
         }
         let data = unsafe { Mmap::map(&file)? };
         Ok(Self { data })
     }
 
-    pub fn records<'a>(&'a self) -> RecordsIterator<'a> {
+    pub fn records(&self) -> RecordsIterator<'_> {
         let mut cursor = Cursor::new(&self.data);
-        cursor.seek(13).expect("13 bytes already have been read");
+        cursor.seek(VERSION_STRING.len() as u64)
+            .expect("data header is checked on initialization");
         RecordsIterator { cursor }
     }
 }

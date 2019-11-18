@@ -1,7 +1,7 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u32, set_field_u64, set_field_time};
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 /// High-level index of `Chunk` records.
 #[derive(Debug, Clone)]
@@ -43,9 +43,13 @@ impl<'a> RecordGen<'a> for ChunkInfo<'a> {
         let end_time = header.end_time.ok_or(Error::InvalidHeader)?;
         let count = header.count.ok_or(Error::InvalidHeader)?;
 
-        if ver != 1 { Err(Error::UnsupportedVersion)? }
+        if ver != 1 {
+            return Err(Error::UnsupportedVersion);
+        }
         let n = c.next_u32()?;
-        if n % 8 != 0 || n/8 != count { Err(Error::InvalidRecord)? }
+        if n % 8 != 0 || n/8 != count {
+            return Err(Error::InvalidRecord);
+        }
         let data = c.next_bytes(n as u64)?;
         Ok(Self { ver, chunk_pos, start_time, end_time, data })
     }
@@ -54,13 +58,13 @@ impl<'a> RecordGen<'a> for ChunkInfo<'a> {
 impl<'a> HeaderGen<'a> for ChunkInfoHeader {
     const OP: u8 = 0x06;
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"ver" => set_field_u32(&mut self.ver, val)?,
-            b"chunk_pos" => set_field_u64(&mut self.chunk_pos, val)?,
-            b"start_time" => set_field_time(&mut self.start_time, val)?,
-            b"end_time" => set_field_time(&mut self.end_time, val)?,
-            b"count" => set_field_u32(&mut self.count, val)?,
+            "ver" => set_field_u32(&mut self.ver, val)?,
+            "chunk_pos" => set_field_u64(&mut self.chunk_pos, val)?,
+            "start_time" => set_field_time(&mut self.start_time, val)?,
+            "end_time" => set_field_time(&mut self.end_time, val)?,
+            "count" => set_field_u32(&mut self.count, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())

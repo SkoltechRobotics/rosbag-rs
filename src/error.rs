@@ -1,6 +1,6 @@
 use std::fmt;
 use std::convert::From;
-use cursor::OutOfBounds;
+use crate::cursor::OutOfBounds;
 
 /// The error type for ROS bag file reading and parsing.
 #[derive(Debug)]

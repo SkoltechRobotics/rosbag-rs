@@ -1,10 +1,11 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{read_record, check_op, unknown_field};
 use super::utils::{set_field_u32, set_field_str};
-use field_iter::FieldIterator;
 use hex::FromHex;
+use log::warn;
 
-use cursor::Cursor;
+use crate::field_iter::FieldIterator;
+use crate::cursor::Cursor;
 
 /// Connection record which contains message type for ROS topic.
 ///
@@ -58,7 +59,9 @@ impl<'a> RecordGen<'a> for Connection<'a> {
                 "topic" => set_field_str(&mut topic, val)?,
                 "type" => set_field_str(&mut tp, val)?,
                 "md5sum" => {
-                    if md5sum.is_some() { Err(Error::InvalidRecord)? }
+                    if md5sum.is_some() {
+                        return Err(Error::InvalidRecord);
+                    }
                     md5sum = Some(<[u8; 16]>::from_hex(val)
                         .map_err(|_| Error::InvalidRecord)?);
                 },
@@ -66,7 +69,7 @@ impl<'a> RecordGen<'a> for Connection<'a> {
                 "latching" => latching = match val {
                     b"1" => true,
                     b"0" => false,
-                    _ => Err(Error::InvalidRecord)?,
+                    _ => return Err(Error::InvalidRecord),
                 },
                 _ => warn!("Unknown field in the connection header: {}", name),
             }
@@ -85,21 +88,21 @@ impl<'a> HeaderGen<'a> for ConnectionHeader<'a> {
 
     fn read_header(mut header: &'a [u8]) -> Result<Self> {
         let mut rec = Self::default();
-        while header.len() != 0 {
+        while !header.is_empty() {
             let (name, val, new_header) = read_record(header)?;
             header = new_header;
             match name {
-                b"op" => check_op(val, Self::OP)?,
-                b"topic" => set_field_str(&mut rec.storage_topic, val)?,
+                "op" => check_op(val, Self::OP)?,
+                "topic" => set_field_str(&mut rec.storage_topic, val)?,
                 _ => rec.process_field(name, val)?,
             }
         }
         Ok(rec)
     }
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"conn" => set_field_u32(&mut self.id, val)?,
+            "conn" => set_field_u32(&mut self.id, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())

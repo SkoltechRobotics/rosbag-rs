@@ -1,11 +1,11 @@
 //! Iterators over content of `Chunk`
 use super::Result;
-use record_types::{RecordGen, MessageData, Connection, HeaderGen};
-use record_types::message_data::MessageDataHeader;
-use record_types::connection::ConnectionHeader;
+use crate::record_types::{RecordGen, MessageData, Connection, HeaderGen};
+use crate::record_types::message_data::MessageDataHeader;
+use crate::record_types::connection::ConnectionHeader;
 
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 /// Record types which can be stored in the `Chunk`
 #[derive(Debug, Clone)]

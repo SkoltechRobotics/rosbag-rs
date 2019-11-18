@@ -1,9 +1,9 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u32};
-use msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 use std::borrow::Cow;
 
-use cursor::Cursor;
+use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
+use crate::cursor::Cursor;
 
 /// Compression options for `Chunk` data.
 #[derive(Debug, Clone, Copy)]
@@ -13,7 +13,7 @@ pub enum Compression {
 }
 
 impl Compression {
-    fn decompress<'a>(&self, data: &'a [u8]) -> Result<Cow<'a, [u8]>> {
+    fn decompress(self, data: &[u8]) -> Result<Cow<'_, [u8]>> {
         Ok(match self {
             Compression::Bzip2 => unimplemented!(),
             Compression::None => Cow::from(data),
@@ -56,7 +56,9 @@ impl<'a> RecordGen<'a> for Chunk<'a> {
         let compression = header.compression.ok_or(Error::InvalidHeader)?;
         let size = header.size.ok_or(Error::InvalidHeader)?;
         let data = compression.decompress(c.next_chunk()?)?;
-        if data.len() != size as usize { Err(Error::InvalidRecord)? }
+        if data.len() != size as usize {
+            return Err(Error::InvalidRecord);
+        }
         Ok(Self { compression, data })
     }
 }
@@ -64,17 +66,19 @@ impl<'a> RecordGen<'a> for Chunk<'a> {
 impl<'a> HeaderGen<'a> for ChunkHeader {
     const OP: u8 = 0x05;
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"compression" => {
-                if self.compression.is_some() { Err(Error::InvalidHeader)? }
+            "compression" => {
+                if self.compression.is_some() {
+                    return Err(Error::InvalidHeader);
+                }
                 self.compression = Some(match val {
                     b"none" => Compression::None,
                     b"bzip2" => Compression::Bzip2,
-                    _ => Err(Error::InvalidRecord)?,
+                    _ => return Err(Error::InvalidHeader),
                 });
             },
-            b"size" => set_field_u32(&mut self.size, val)?,
+            "size" => set_field_u32(&mut self.size, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())

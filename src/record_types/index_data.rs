@@ -1,7 +1,7 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u32};
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 /// Index record which describes messages offset for `Connection` with
 /// `conn_id` ID in the preceding `Chunk`.
@@ -36,10 +36,13 @@ impl<'a> RecordGen<'a> for IndexData<'a> {
         let conn_id = header.conn_id.ok_or(Error::InvalidHeader)?;
         let count = header.count.ok_or(Error::InvalidHeader)?;
 
-        if ver != 1 { Err(Error::UnsupportedVersion)? }
+        if ver != 1 {
+            return Err(Error::UnsupportedVersion);
+        }
         let n = c.next_u32()?;
-        if n % 12 != 0 { Err(Error::InvalidRecord)? }
-        if n/12 != count { Err(Error::InvalidRecord)? }
+        if n % 12 != 0 || n/12 != count {
+            return Err(Error::InvalidRecord);
+        }
         let data = c.next_bytes(n as u64)?;
         Ok(Self { ver, conn_id, data })
     }
@@ -48,11 +51,11 @@ impl<'a> RecordGen<'a> for IndexData<'a> {
 impl<'a> HeaderGen<'a> for IndexDataHeader {
     const OP: u8 = 0x04;
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"ver" => set_field_u32(&mut self.ver, val)?,
-            b"conn" => set_field_u32(&mut self.conn_id, val)?,
-            b"count" => set_field_u32(&mut self.count, val)?,
+            "ver" => set_field_u32(&mut self.ver, val)?,
+            "conn" => set_field_u32(&mut self.conn_id, val)?,
+            "count" => set_field_u32(&mut self.count, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())

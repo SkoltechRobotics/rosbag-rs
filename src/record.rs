@@ -1,12 +1,12 @@
 use super::{Result, Error};
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
-use record_types::{
+use crate::record_types::{
     BagHeader, Chunk, Connection, MessageData, IndexData, ChunkInfo,
     RecordGen,
 };
-use field_iter::FieldIterator;
+use crate::field_iter::FieldIterator;
 
 /// Enum with all possible record variants
 #[derive(Debug, Clone)]
@@ -29,8 +29,8 @@ impl<'a> Record<'a> {
                 Some(Ok((name, v))) if name == "op" && v.len() == 1
                     => break v[0],
                 Some(Ok(_)) => (),
-                Some(Err(e)) => Err(e)?,
-                None => Err(Error::InvalidRecord)?,
+                Some(Err(e)) => return Err(e),
+                None => return Err(Error::InvalidRecord),
             }
         };
 
@@ -42,7 +42,7 @@ impl<'a> Record<'a> {
             MessageData::OP =>
                 Record::MessageData(MessageData::read(header, c)?),
             BagHeader::OP => Record::BagHeader(BagHeader::read(header, c)?),
-            _ => Err(Error::InvalidRecord)?
+            _ => return Err(Error::InvalidRecord),
         })
     }
 

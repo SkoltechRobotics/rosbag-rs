@@ -1,6 +1,6 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u32, set_field_time};
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 /// Message data for a `Connection` with `conn_id` ID.
 #[derive(Debug, Clone)]
@@ -33,10 +33,10 @@ impl<'a> RecordGen<'a> for MessageData<'a> {
 impl<'a> HeaderGen<'a> for MessageDataHeader {
     const OP: u8 = 0x02;
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"conn" => set_field_u32(&mut self.conn_id, val)?,
-            b"time" => set_field_time(&mut self.time, val)?,
+            "conn" => set_field_u32(&mut self.conn_id, val)?,
+            "time" => set_field_time(&mut self.time, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())

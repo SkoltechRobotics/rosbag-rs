@@ -1,7 +1,7 @@
-use byteorder::{LE, ByteOrder};
 use std::str;
 use std::iter::Iterator;
-use super::{Result, Error};
+use super::Result;
+use crate::record_types::utils::read_record;
 
 /// Iterator which goes over record header fields
 pub(crate) struct FieldIterator<'a> {
@@ -18,30 +18,14 @@ impl<'a> Iterator for FieldIterator<'a> {
     type Item = Result<(&'a str, &'a [u8])>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.buf.len() == 0 { return None; }
-
-        if self.buf.len() < 4 { return Some(Err(Error::InvalidHeader)); }
-        let n = LE::read_u32(&self.buf[..4]) as usize;
-        self.buf = &self.buf[4..];
-
-        if self.buf.len() < n { return Some(Err(Error::InvalidHeader)); }
-        let rec = &self.buf[..n];
-        self.buf = &self.buf[n..];
-
-        let mut delim = 0;
-        for (i, b) in rec.iter().enumerate() {
-            match *b {
-                b'=' => {
-                    delim = i;
-                    break;
-                },
-                0x20..=0x7e => (),
-                _ => return Some(Err(Error::InvalidHeader)),
-            }
+        if self.buf.is_empty() {
+            return None;
         }
-        if delim == 0 { return Some(Err(Error::InvalidHeader)); }
-        let name = str::from_utf8(&rec[..delim]).expect("already checked");
-        let val = &rec[delim+1..];
+        let (name, val, leftover) = match read_record(&self.buf) {
+            Ok(v) => v,
+            Err(err) => return Some(Err(err)),
+        };
+        self.buf = leftover;
         Some(Ok((name, val)))
     }
 }

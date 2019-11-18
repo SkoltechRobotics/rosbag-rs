@@ -1,7 +1,7 @@
 //! Collection of record types.
 use super::{Result, Error};
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 mod bag_header;
 pub use self::bag_header::BagHeader;
@@ -24,10 +24,10 @@ pub(crate) trait HeaderGen<'a>: Sized + Default {
 
     fn read_header(mut header: &'a [u8]) -> Result<Self> {
         let mut rec = Self::default();
-        while header.len() != 0 {
+        while !header.is_empty() {
             let (name, val, new_header) = read_record(header)?;
             header = new_header;
-            if name == b"op" {
+            if name == "op" {
                 check_op(val, Self::OP)?;
             } else {
                 rec.process_field(name, val)?;
@@ -36,7 +36,7 @@ pub(crate) trait HeaderGen<'a>: Sized + Default {
         Ok(rec)
     }
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> ;
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> ;
 }
 
 pub(crate) trait RecordGen<'a>: Sized {

@@ -1,7 +1,7 @@
 use super::{RecordGen, HeaderGen, Error, Result};
 use super::utils::{unknown_field, set_field_u64, set_field_u32};
 
-use cursor::Cursor;
+use crate::cursor::Cursor;
 
 /// Bag file header record which contains basic information about the file.
 #[derive(Debug, Clone)]
@@ -38,11 +38,11 @@ impl<'a> RecordGen<'a> for BagHeader {
 impl<'a> HeaderGen<'a> for BagHeaderHeader {
     const OP: u8 = 0x03;
 
-    fn process_field(&mut self, name: &[u8], val: &[u8]) -> Result<()> {
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> {
         match name {
-            b"index_pos" => set_field_u64(&mut self.index_pos, val)?,
-            b"conn_count" => set_field_u32(&mut self.conn_count, val)?,
-            b"chunk_count" => set_field_u32(&mut self.chunk_count, val)?,
+            "index_pos" => set_field_u64(&mut self.index_pos, val)?,
+            "conn_count" => set_field_u32(&mut self.conn_count, val)?,
+            "chunk_count" => set_field_u32(&mut self.chunk_count, val)?,
             _ => unknown_field(name, val),
         }
         Ok(())
