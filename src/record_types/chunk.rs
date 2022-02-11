@@ -13,9 +13,17 @@ pub enum Compression {
 }
 
 impl Compression {
-    fn decompress(self, data: &[u8]) -> Result<Cow<'_, [u8]>> {
+    fn decompress(self, data: &[u8], decompressed_size: Option<u32>) -> Result<Cow<'_, [u8]>> {
         Ok(match self {
-            Compression::Bzip2 => unimplemented!(),
+            Compression::Bzip2 => {
+                let mut decompressed = Vec::new();
+                decompressed.reserve(decompressed_size.map(|s| s as usize).unwrap_or(data.len()));
+                let mut decompressor = bzip2::Decompress::new(false);
+                decompressor
+                    .decompress_vec(data, &mut decompressed)
+                    .map_err(|e| Error::Bzip2DecompressionError(e.to_string()))?;
+                Cow::from(decompressed)
+            }
             Compression::None => Cow::from(data),
         })
     }
@@ -55,7 +63,7 @@ impl<'a> RecordGen<'a> for Chunk<'a> {
     fn read_data(c: &mut Cursor<'a>, header: Self::Header) -> Result<Self> {
         let compression = header.compression.ok_or(Error::InvalidHeader)?;
         let size = header.size.ok_or(Error::InvalidHeader)?;
-        let data = compression.decompress(c.next_chunk()?)?;
+        let data = compression.decompress(c.next_chunk()?, header.size)?;
         if data.len() != size as usize {
             return Err(Error::InvalidRecord);
         }

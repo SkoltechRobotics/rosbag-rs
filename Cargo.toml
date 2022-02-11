@@ -11,6 +11,7 @@ keywords = ["ros", "datasets", "robotics"]
 
 [dependencies]
 byteorder = "1"
+bzip2 = "0.4"
 hex = "0.4"
 log = "0.4"
 memmap2 = "0.5"
