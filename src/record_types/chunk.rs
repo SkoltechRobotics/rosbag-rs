@@ -74,7 +74,7 @@ impl<'a> HeaderGen<'a> for ChunkHeader {
                 }
                 self.compression = Some(match val {
                     b"none" => Compression::None,
-                    b"bzip2" => Compression::Bzip2,
+                    b"bz2" => Compression::Bzip2,
                     _ => return Err(Error::InvalidHeader),
                 });
             }
