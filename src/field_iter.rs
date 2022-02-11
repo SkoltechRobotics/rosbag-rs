@@ -21,7 +21,7 @@ impl<'a> Iterator for FieldIterator<'a> {
         if self.buf.is_empty() {
             return None;
         }
-        let (name, val, leftover) = match read_record(&self.buf) {
+        let (name, val, leftover) = match read_record(self.buf) {
             Ok(v) => v,
             Err(err) => return Some(Err(err)),
         };

@@ -18,7 +18,7 @@ pub struct IndexData<'a> {
 impl<'a> IndexData<'a> {
     pub fn entries(&'a self) -> IndexDataEntriesIterator<'a> {
         IndexDataEntriesIterator {
-            cursor: Cursor::new(&self.data),
+            cursor: Cursor::new(self.data),
         }
     }
 }

@@ -53,7 +53,7 @@ impl<'a> RecordGen<'a> for Connection<'a> {
         let mut caller_id = None;
         let mut latching = false;
 
-        for field in FieldIterator::new(&buf) {
+        for field in FieldIterator::new(buf) {
             let (name, val) = field?;
             match name {
                 "topic" => set_field_str(&mut topic, val)?,

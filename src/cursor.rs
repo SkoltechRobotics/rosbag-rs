@@ -44,7 +44,7 @@ impl<'a> Cursor<'a> {
 
     pub fn next_chunk(&mut self) -> Result<&'a [u8], OutOfBounds> {
         let n = self.next_u32()? as u64;
-        Ok(self.next_bytes(n)?)
+        self.next_bytes(n)
     }
 
     pub fn next_u32(&mut self) -> Result<u32, OutOfBounds> {
