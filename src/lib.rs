@@ -36,7 +36,7 @@ use std::iter::Iterator;
 use std::path::Path;
 use std::{result, str};
 
-use memmap::Mmap;
+use memmap2::Mmap;
 
 const VERSION_STRING: &str = "#ROSBAG V2.0\n";
 
