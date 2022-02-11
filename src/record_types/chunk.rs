@@ -9,6 +9,7 @@ use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 #[derive(Debug, Clone, Copy)]
 pub enum Compression {
     Bzip2,
+    Lz4,
     None,
 }
 
@@ -22,6 +23,16 @@ impl Compression {
                 decompressor
                     .decompress_vec(data, &mut decompressed)
                     .map_err(|e| Error::Bzip2DecompressionError(e.to_string()))?;
+                Cow::from(decompressed)
+            }
+            Compression::Lz4 => {
+                let mut decoder = lz4::Decoder::new(data)
+                    .map_err(|e| Error::Lz4DecompressionError(e.to_string()))?;
+                let mut decompressed = Vec::new();
+                decompressed.reserve(decompressed_size.map(|s| s as usize).unwrap_or(data.len()));
+                std::io::copy(&mut decoder, &mut decompressed).map_err(|_| {
+                    Error::Lz4DecompressionError("Error while decoding".to_string())
+                })?;
                 Cow::from(decompressed)
             }
             Compression::None => Cow::from(data),
@@ -83,6 +94,7 @@ impl<'a> HeaderGen<'a> for ChunkHeader {
                 self.compression = Some(match val {
                     b"none" => Compression::None,
                     b"bz2" => Compression::Bzip2,
+                    b"lz4" => Compression::Lz4,
                     _ => return Err(Error::InvalidHeader),
                 });
             }

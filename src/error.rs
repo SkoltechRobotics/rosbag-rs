@@ -10,6 +10,7 @@ pub enum Error {
     UnsupportedVersion,
     OutOfBounds,
     Bzip2DecompressionError(String),
+    Lz4DecompressionError(String),
 }
 
 impl From<OutOfBounds> for Error {
@@ -27,6 +28,7 @@ impl fmt::Display for Error {
             UnsupportedVersion => "unsupported version".to_string(),
             OutOfBounds => "out of bounds".to_string(),
             Bzip2DecompressionError(es) => format!("bzip2 decompression error: {}", es),
+            Lz4DecompressionError(es) => format!("LZ4 decompression error: {}", es),
         };
         write!(f, "rosbag::Error: {}", s)
     }
