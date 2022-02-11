@@ -1,5 +1,5 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{unknown_field, set_field_u64, set_field_u32};
+use super::utils::{set_field_u32, set_field_u64, unknown_field};
+use super::{Error, HeaderGen, RecordGen, Result};
 
 use crate::cursor::Cursor;
 
@@ -31,7 +31,11 @@ impl<'a> RecordGen<'a> for BagHeader {
         let n = c.next_u32()? as u64;
         let p = c.pos();
         c.seek(p + n)?;
-        Ok(BagHeader { index_pos, conn_count, chunk_count } )
+        Ok(BagHeader {
+            index_pos,
+            conn_count,
+            chunk_count,
+        })
     }
 }
 

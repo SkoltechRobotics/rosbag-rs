@@ -1,5 +1,5 @@
 //! Collection of record types.
-use super::{Result, Error};
+use super::{Error, Result};
 
 use crate::cursor::Cursor;
 
@@ -12,12 +12,12 @@ pub use self::message_data::MessageData;
 pub(crate) mod connection;
 pub use self::connection::Connection;
 mod index_data;
-pub use self::index_data::{IndexData, IndexDataEntry, IndexDataEntriesIterator};
+pub use self::index_data::{IndexData, IndexDataEntriesIterator, IndexDataEntry};
 mod chunk_info;
-pub use self::chunk_info::{ChunkInfo, ChunkInfoEntry, ChunkInfoEntriesIterator};
+pub use self::chunk_info::{ChunkInfo, ChunkInfoEntriesIterator, ChunkInfoEntry};
 
 pub(crate) mod utils;
-use self::utils::{read_record, check_op};
+use self::utils::{check_op, read_record};
 
 pub(crate) trait HeaderGen<'a>: Sized + Default {
     const OP: u8;
@@ -36,7 +36,7 @@ pub(crate) trait HeaderGen<'a>: Sized + Default {
         Ok(rec)
     }
 
-    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()> ;
+    fn process_field(&mut self, name: &str, val: &[u8]) -> Result<()>;
 }
 
 pub(crate) trait RecordGen<'a>: Sized {

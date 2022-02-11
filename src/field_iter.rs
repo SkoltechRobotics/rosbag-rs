@@ -1,7 +1,7 @@
-use std::str;
-use std::iter::Iterator;
 use super::Result;
 use crate::record_types::utils::read_record;
+use std::iter::Iterator;
+use std::str;
 
 /// Iterator which goes over record header fields
 pub(crate) struct FieldIterator<'a> {

@@ -1,4 +1,4 @@
-use byteorder::{LE, ByteOrder};
+use byteorder::{ByteOrder, LE};
 
 pub(crate) struct Cursor<'a> {
     data: &'a [u8],
@@ -21,11 +21,17 @@ impl<'a> Cursor<'a> {
         Ok(())
     }
 
-    pub fn pos(&self) -> u64 { self.pos }
+    pub fn pos(&self) -> u64 {
+        self.pos
+    }
 
-    pub fn len(&self) -> u64 { self.data.len() as u64 }
+    pub fn len(&self) -> u64 {
+        self.data.len() as u64
+    }
 
-    pub fn left(&self) -> u64 { self.data.len() as u64 - self.pos() }
+    pub fn left(&self) -> u64 {
+        self.data.len() as u64 - self.pos()
+    }
 
     pub fn next_bytes(&mut self, n: u64) -> Result<&'a [u8], OutOfBounds> {
         if self.pos + n > self.len() {
@@ -54,6 +60,6 @@ impl<'a> Cursor<'a> {
     pub fn next_time(&mut self) -> Result<u64, OutOfBounds> {
         let s = self.next_u32()? as u64;
         let ns = self.next_u32()? as u64;
-        Ok(1_000_000_000*s + ns)
+        Ok(1_000_000_000 * s + ns)
     }
 }

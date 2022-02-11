@@ -1,9 +1,9 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{unknown_field, set_field_u32};
+use super::utils::{set_field_u32, unknown_field};
+use super::{Error, HeaderGen, RecordGen, Result};
 use std::borrow::Cow;
 
-use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 use crate::cursor::Cursor;
+use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 
 /// Compression options for `Chunk` data.
 #[derive(Debug, Clone, Copy)]
@@ -77,7 +77,7 @@ impl<'a> HeaderGen<'a> for ChunkHeader {
                     b"bzip2" => Compression::Bzip2,
                     _ => return Err(Error::InvalidHeader),
                 });
-            },
+            }
             "size" => set_field_u32(&mut self.size, val)?,
             _ => unknown_field(name, val),
         }

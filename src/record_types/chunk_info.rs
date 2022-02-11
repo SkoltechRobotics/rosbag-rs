@@ -1,5 +1,5 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{unknown_field, set_field_u32, set_field_u64, set_field_time};
+use super::utils::{set_field_time, set_field_u32, set_field_u64, unknown_field};
+use super::{Error, HeaderGen, RecordGen, Result};
 
 use crate::cursor::Cursor;
 
@@ -20,7 +20,9 @@ pub struct ChunkInfo<'a> {
 
 impl<'a> ChunkInfo<'a> {
     pub fn entries(&'a self) -> ChunkInfoEntriesIterator<'a> {
-        ChunkInfoEntriesIterator { cursor: Cursor::new(&self.data) }
+        ChunkInfoEntriesIterator {
+            cursor: Cursor::new(&self.data),
+        }
     }
 }
 
@@ -47,11 +49,17 @@ impl<'a> RecordGen<'a> for ChunkInfo<'a> {
             return Err(Error::UnsupportedVersion);
         }
         let n = c.next_u32()?;
-        if n % 8 != 0 || n/8 != count {
+        if n % 8 != 0 || n / 8 != count {
             return Err(Error::InvalidRecord);
         }
         let data = c.next_bytes(n as u64)?;
-        Ok(Self { ver, chunk_pos, start_time, end_time, data })
+        Ok(Self {
+            ver,
+            chunk_pos,
+            start_time,
+            end_time,
+            data,
+        })
     }
 }
 
@@ -90,11 +98,15 @@ impl<'a> Iterator for ChunkInfoEntriesIterator<'a> {
     type Item = ChunkInfoEntry;
 
     fn next(&mut self) -> Option<ChunkInfoEntry> {
-        if self.cursor.left() == 0 { return None; }
-        if self.cursor.left() < 8 { panic!("unexpected data leftover for entries") }
+        if self.cursor.left() == 0 {
+            return None;
+        }
+        if self.cursor.left() < 8 {
+            panic!("unexpected data leftover for entries")
+        }
         let conn_id = self.cursor.next_u32().expect("already checked");
         let count = self.cursor.next_u32().expect("already checked");
 
-        Some(ChunkInfoEntry{ conn_id, count })
+        Some(ChunkInfoEntry { conn_id, count })
     }
 }
