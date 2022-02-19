@@ -1,4 +1,4 @@
-name: Rosbag
+name: rosbag
 
 on:
   pull_request:
