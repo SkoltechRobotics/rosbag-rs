@@ -13,9 +13,9 @@ keywords = ["ros", "datasets", "robotics"]
 categories = ["parser-implementations", "science::robotics"]
 
 [dependencies]
-byteorder = "1"
-bzip2 = "0.4"
+byteorder = "1.1"
+bzip2 = "0.4.3"
 base16ct = "0.1"
-log = "0.4"
-lz4 = "1.23"
+log = "0.4.4"
+lz4 = "1.23.2"
 memmap2 = "0.5"
