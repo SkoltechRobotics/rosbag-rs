@@ -1,7 +1,7 @@
-use std::str;
-use std::iter::Iterator;
 use super::Result;
 use crate::record_types::utils::read_record;
+use std::iter::Iterator;
+use std::str;
 
 /// Iterator which goes over record header fields
 pub(crate) struct FieldIterator<'a> {
@@ -21,7 +21,7 @@ impl<'a> Iterator for FieldIterator<'a> {
         if self.buf.is_empty() {
             return None;
         }
-        let (name, val, leftover) = match read_record(&self.buf) {
+        let (name, val, leftover) = match read_record(self.buf) {
             Ok(v) => v,
             Err(err) => return Some(Err(err)),
         };

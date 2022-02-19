@@ -1,5 +1,5 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{unknown_field, set_field_u32, set_field_time};
+use super::utils::{set_field_time, set_field_u32, unknown_field};
+use super::{Error, HeaderGen, RecordGen, Result};
 use crate::cursor::Cursor;
 
 /// Message data for a `Connection` with `conn_id` ID.
@@ -26,7 +26,11 @@ impl<'a> RecordGen<'a> for MessageData<'a> {
         let conn_id = header.conn_id.ok_or(Error::InvalidHeader)?;
         let time = header.time.ok_or(Error::InvalidHeader)?;
         let data = c.next_chunk()?;
-        Ok(MessageData { conn_id, time, data })
+        Ok(MessageData {
+            conn_id,
+            time,
+            data,
+        })
     }
 }
 

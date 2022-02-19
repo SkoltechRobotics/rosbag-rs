@@ -1,5 +1,5 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{unknown_field, set_field_u32};
+use super::utils::{set_field_u32, unknown_field};
+use super::{Error, HeaderGen, RecordGen, Result};
 
 use crate::cursor::Cursor;
 
@@ -17,7 +17,9 @@ pub struct IndexData<'a> {
 
 impl<'a> IndexData<'a> {
     pub fn entries(&'a self) -> IndexDataEntriesIterator<'a> {
-        IndexDataEntriesIterator { cursor: Cursor::new(&self.data) }
+        IndexDataEntriesIterator {
+            cursor: Cursor::new(self.data),
+        }
     }
 }
 
@@ -40,7 +42,7 @@ impl<'a> RecordGen<'a> for IndexData<'a> {
             return Err(Error::UnsupportedVersion);
         }
         let n = c.next_u32()?;
-        if n % 12 != 0 || n/12 != count {
+        if n % 12 != 0 || n / 12 != count {
             return Err(Error::InvalidRecord);
         }
         let data = c.next_bytes(n as u64)?;
@@ -80,10 +82,14 @@ impl<'a> Iterator for IndexDataEntriesIterator<'a> {
     type Item = IndexDataEntry;
 
     fn next(&mut self) -> Option<IndexDataEntry> {
-        if self.cursor.left() == 0 { return None; }
-        if self.cursor.left() < 12 { panic!("unexpected data leftover for entries") }
+        if self.cursor.left() == 0 {
+            return None;
+        }
+        if self.cursor.left() < 12 {
+            panic!("unexpected data leftover for entries")
+        }
         let time = self.cursor.next_time().expect("already checked");
         let offset = self.cursor.next_u32().expect("already checked");
-        Some(IndexDataEntry{ time, offset })
+        Some(IndexDataEntry { time, offset })
     }
 }

@@ -11,9 +11,11 @@ keywords = ["ros", "datasets", "robotics"]
 
 [dependencies]
 byteorder = "1"
-log = "0.4"
+bzip2 = "0.4"
 hex = "0.4"
-memmap = "0.7"
+log = "0.4"
+lz4 = "1.23"
+memmap2 = "0.5"
 
 [badges]
 travis-ci = { repository = "SkoltechRobotics/rosbag-rs" }

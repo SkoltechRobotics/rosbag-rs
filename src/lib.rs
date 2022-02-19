@@ -31,25 +31,25 @@
 //! }
 //! ```
 use std::fs::File;
+use std::io::{self, Read};
+use std::iter::Iterator;
 use std::path::Path;
 use std::{result, str};
-use std::iter::Iterator;
-use std::io::{self, Read};
 
-use memmap::Mmap;
+use memmap2::Mmap;
 
 const VERSION_STRING: &str = "#ROSBAG V2.0\n";
 
-mod record;
-mod field_iter;
 mod cursor;
 mod error;
+mod field_iter;
 pub mod msg_iter;
+mod record;
 pub mod record_types;
 
-pub use record::Record;
-pub use error::Error;
 use cursor::Cursor;
+pub use error::Error;
+pub use record::Record;
 
 /// Struct which holds open rosbag file.
 pub struct RosBag {
@@ -66,8 +66,10 @@ impl RosBag {
         let mut buf = [0u8; 13];
         file.read_exact(&mut buf)?;
         if buf != VERSION_STRING.as_bytes() {
-            return Err(io::Error::new(io::ErrorKind::InvalidData,
-                "Invalid or unsupported rosbag header"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid or unsupported rosbag header",
+            ));
         }
         let data = unsafe { Mmap::map(&file)? };
         Ok(Self { data })
@@ -75,7 +77,8 @@ impl RosBag {
 
     pub fn records(&self) -> RecordsIterator<'_> {
         let mut cursor = Cursor::new(&self.data);
-        cursor.seek(VERSION_STRING.len() as u64)
+        cursor
+            .seek(VERSION_STRING.len() as u64)
             .expect("data header is checked on initialization");
         RecordsIterator { cursor }
     }
@@ -103,7 +106,9 @@ impl<'a> Iterator for RecordsIterator<'a> {
     type Item = Result<Record<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor.left() == 0 { return None; }
+        if self.cursor.left() == 0 {
+            return None;
+        }
         Some(Record::next_record(&mut self.cursor))
     }
 }

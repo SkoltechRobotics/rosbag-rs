@@ -1,9 +1,8 @@
 //! Iterators over content of `Chunk`
 use super::Result;
-use crate::record_types::{RecordGen, MessageData, Connection, HeaderGen};
-use crate::record_types::message_data::MessageDataHeader;
 use crate::record_types::connection::ConnectionHeader;
-
+use crate::record_types::message_data::MessageDataHeader;
+use crate::record_types::{Connection, HeaderGen, MessageData, RecordGen};
 
 use crate::cursor::Cursor;
 
@@ -23,16 +22,14 @@ impl<'a> ChunkRecord<'a> {
         })
     }
 
-    fn message_only(header: &'a [u8], cursor: &mut Cursor<'a>)
-        -> Result<Option<MessageData<'a>>>
-    {
+    fn message_only(header: &'a [u8], cursor: &mut Cursor<'a>) -> Result<Option<MessageData<'a>>> {
         Ok(match MessageDataHeader::read_header(header) {
             Ok(h) => Some(MessageData::read_data(cursor, h)?),
             Err(_) => {
                 ConnectionHeader::read_header(header)?;
                 cursor.next_chunk()?;
                 None
-            },
+            }
         })
     }
 }
@@ -45,9 +42,13 @@ pub struct ChunkRecordsIterator<'a> {
 
 impl<'a> ChunkRecordsIterator<'a> {
     pub(crate) fn new(data: &'a [u8]) -> Self {
-        assert!(data.len() <= 1<<32,
-            "chunk length should not be bigger than 2^32");
-        Self { cursor: Cursor::new(data) }
+        assert!(
+            data.len() <= 1 << 32,
+            "chunk length should not be bigger than 2^32"
+        );
+        Self {
+            cursor: Cursor::new(data),
+        }
     }
 
     /// Seek to an offset, in bytes from the beggining of an internall chunk
@@ -65,16 +66,18 @@ impl<'a> Iterator for ChunkRecordsIterator<'a> {
     type Item = Result<ChunkRecord<'a>>;
 
     fn next(&mut self) -> Option<Result<ChunkRecord<'a>>> {
-        if self.cursor.left() == 0 { return None; }
+        if self.cursor.left() == 0 {
+            return None;
+        }
 
         let header = match self.cursor.next_chunk() {
-            Ok(v) => v, Err(e) => return Some(Err(e.into())),
+            Ok(v) => v,
+            Err(e) => return Some(Err(e.into())),
         };
 
         Some(ChunkRecord::new(header, &mut self.cursor))
     }
 }
-
 
 /// Iterator which iterates over `MessageData` records stored in the
 /// [`Chunk`](../record_types/struct.Chunk.html).
@@ -84,10 +87,11 @@ pub struct ChunkMessagesIterator<'a> {
     cursor: Cursor<'a>,
 }
 
-
 impl<'a> ChunkMessagesIterator<'a> {
     pub(crate) fn new(data: &'a [u8]) -> Self {
-        Self { cursor: Cursor::new(data) }
+        Self {
+            cursor: Cursor::new(data),
+        }
     }
 
     /// Seek to an offset, in bytes from the beggining of an internall chunk
@@ -105,10 +109,13 @@ impl<'a> Iterator for ChunkMessagesIterator<'a> {
     type Item = Result<MessageData<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor.left() == 0 { return None; }
+        if self.cursor.left() == 0 {
+            return None;
+        }
 
         let header = match self.cursor.next_chunk() {
-            Ok(v) => v, Err(e) => return Some(Err(e.into())),
+            Ok(v) => v,
+            Err(e) => return Some(Err(e.into())),
         };
 
         match ChunkRecord::message_only(header, &mut self.cursor) {

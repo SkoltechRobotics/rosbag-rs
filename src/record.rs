@@ -1,12 +1,11 @@
-use super::{Result, Error};
+use super::{Error, Result};
 
 use crate::cursor::Cursor;
 
-use crate::record_types::{
-    BagHeader, Chunk, Connection, MessageData, IndexData, ChunkInfo,
-    RecordGen,
-};
 use crate::field_iter::FieldIterator;
+use crate::record_types::{
+    BagHeader, Chunk, ChunkInfo, Connection, IndexData, MessageData, RecordGen,
+};
 
 /// Enum with all possible record variants
 #[derive(Debug, Clone)]
@@ -26,8 +25,7 @@ impl<'a> Record<'a> {
         let mut fi = FieldIterator::new(header);
         let op = loop {
             match fi.next() {
-                Some(Ok((name, v))) if name == "op" && v.len() == 1
-                    => break v[0],
+                Some(Ok((name, v))) if name == "op" && v.len() == 1 => break v[0],
                 Some(Ok(_)) => (),
                 Some(Err(e)) => return Err(e),
                 None => return Err(Error::InvalidRecord),
@@ -39,8 +37,7 @@ impl<'a> Record<'a> {
             Chunk::OP => Record::Chunk(Chunk::read(header, c)?),
             ChunkInfo::OP => Record::ChunkInfo(ChunkInfo::read(header, c)?),
             Connection::OP => Record::Connection(Connection::read(header, c)?),
-            MessageData::OP =>
-                Record::MessageData(MessageData::read(header, c)?),
+            MessageData::OP => Record::MessageData(MessageData::read(header, c)?),
             BagHeader::OP => Record::BagHeader(BagHeader::read(header, c)?),
             _ => return Err(Error::InvalidRecord),
         })

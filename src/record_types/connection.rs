@@ -1,11 +1,11 @@
-use super::{RecordGen, HeaderGen, Error, Result};
-use super::utils::{read_record, check_op, unknown_field};
-use super::utils::{set_field_u32, set_field_str};
+use super::utils::{check_op, read_record, unknown_field};
+use super::utils::{set_field_str, set_field_u32};
+use super::{Error, HeaderGen, RecordGen, Result};
 use hex::FromHex;
 use log::warn;
 
-use crate::field_iter::FieldIterator;
 use crate::cursor::Cursor;
+use crate::field_iter::FieldIterator;
 
 /// Connection record which contains message type for ROS topic.
 ///
@@ -53,7 +53,7 @@ impl<'a> RecordGen<'a> for Connection<'a> {
         let mut caller_id = None;
         let mut latching = false;
 
-        for field in FieldIterator::new(&buf) {
+        for field in FieldIterator::new(buf) {
             let (name, val) = field?;
             match name {
                 "topic" => set_field_str(&mut topic, val)?,
@@ -62,15 +62,16 @@ impl<'a> RecordGen<'a> for Connection<'a> {
                     if md5sum.is_some() {
                         return Err(Error::InvalidRecord);
                     }
-                    md5sum = Some(<[u8; 16]>::from_hex(val)
-                        .map_err(|_| Error::InvalidRecord)?);
-                },
+                    md5sum = Some(<[u8; 16]>::from_hex(val).map_err(|_| Error::InvalidRecord)?);
+                }
                 "callerid" => set_field_str(&mut caller_id, val)?,
-                "latching" => latching = match val {
-                    b"1" => true,
-                    b"0" => false,
-                    _ => return Err(Error::InvalidRecord),
-                },
+                "latching" => {
+                    latching = match val {
+                        b"1" => true,
+                        b"0" => false,
+                        _ => return Err(Error::InvalidRecord),
+                    }
+                }
                 _ => warn!("Unknown field in the connection header: {}", name),
             }
         }
@@ -79,7 +80,15 @@ impl<'a> RecordGen<'a> for Connection<'a> {
         let tp = tp.ok_or(Error::InvalidHeader)?;
         let md5sum = md5sum.ok_or(Error::InvalidHeader)?;
         let caller_id = caller_id.unwrap_or("");
-        Ok(Self { id, storage_topic, topic, tp, md5sum, caller_id, latching })
+        Ok(Self {
+            id,
+            storage_topic,
+            topic,
+            tp,
+            md5sum,
+            caller_id,
+            latching,
+        })
     }
 }
 
