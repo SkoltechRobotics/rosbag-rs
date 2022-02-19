@@ -1,13 +1,15 @@
 //! Utilities for efficient reading of ROS bag files.
 //!
 //! # Example
-//! ```ignore
+//! ```
 //! use rosbag::{RosBag, Record};
 //!
-//! let bag = RosBag::new(path).unwrap();
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # let path = "dummy.bag";
+//! let bag = RosBag::new(path)?;
 //! // create low-level iterator over rosbag records
 //! let mut records = bag.records();
-//! // acquire `BagHeader` record, which should be first one
+//! // acquire `BagHeader` record, which should be the first one
 //! let header = match records.next() {
 //!     Some(Ok(Record::BagHeader(bh))) => bh,
 //!     _ => panic!("Failed to acquire bag header record"),
@@ -17,9 +19,8 @@
 //!     match record? {
 //!         Record::Chunk(chunk) => {
 //!             for msg in chunk.iter_msgs() {
-//!                 println!("{}", msg?.time)
+//!                 // process messages
 //!             }
-//!             break;
 //!         },
 //!         _ => (),
 //!     }
@@ -27,9 +28,13 @@
 //! // jump to index records
 //! records.seek(header.index_pos).unwrap();
 //! for record in records {
-//!     println!("{:?}", record?);
+//!     // process index records
 //! }
+//! # Ok(()) }
 //! ```
+#![doc(html_root_url = "https://docs.rs/rosbag/0.4.0")]
+#![warn(missing_docs, rust_2018_idioms)]
+
 use std::fs::File;
 use std::io::{self, Read};
 use std::iter::Iterator;
@@ -75,6 +80,7 @@ impl RosBag {
         Ok(Self { data })
     }
 
+    /// Get iterator over records.
     pub fn records(&self) -> RecordsIterator<'_> {
         let mut cursor = Cursor::new(&self.data);
         cursor
@@ -106,6 +112,7 @@ impl<'a> Iterator for RecordsIterator<'a> {
     type Item = Result<Record<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        println!("{:?}", self.cursor.left());
         if self.cursor.left() == 0 {
             return None;
         }

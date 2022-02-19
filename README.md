@@ -1,4 +1,11 @@
-# rosbag-rs [![crates.io](https://img.shields.io/crates/v/rosbag.svg)](https://crates.io/crates/rosbag) [![Documentation](https://docs.rs/rosbag/badge.svg)](https://docs.rs/rosbag) [![Build Status](https://travis-ci.org/SkoltechRobotics/rosbag-rs.svg?branch=master)](https://travis-ci.org/SkoltechRobotics/rosbag-rs) [![dependency status](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs/status.svg)](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs)
+# rosbag-rs
+
+[![Crate][crate-image]][crate-link]
+[![Docs][docs-image]][docs-link]
+![Apache2/MIT licensed][license-image]
+![Rust Version][rustc-image]
+[![Build Status][build-image]][build-link]
+[![Dependency Status][deps-image]][deps-link]
 
 A pure Rust crate for reading ROS bag files.
 
@@ -33,6 +40,13 @@ for record in records {
 }
 ```
 
+## Minimum Supported Rust Version
+
+Rust **1.56** or higher.
+
+Minimum supported Rust version can be changed in the future, but it will be
+done with a minor version bump.
+
 ## License
 
 The crate is licensed under either of
@@ -47,3 +61,16 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
+
+[//]: # (badges)
+
+[crate-image]: https://img.shields.io/crates/v/rosbag.svg
+[crate-link]: https://crates.io/crates/rosbag
+[docs-image]: https://docs.rs/rosbag/badge.svg
+[docs-link]: https://docs.rs/rosbag
+[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
+[build-image]: https://github.com/SkoltechRobotics/rosbag-rs/actions/workflows/rosbag.yml/badge.svg
+[build-link]: https://github.com/SkoltechRobotics/rosbag-rs/actions/workflows/rosbag.yml
+[deps-image]: https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs/status.svg
+[deps-link]: https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs

@@ -7,9 +7,13 @@ use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
 
 /// Compression options for `Chunk` data.
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub enum Compression {
+    /// Bzip2 compression.
     Bzip2,
+    /// Lz4 compression.
     Lz4,
+    /// No compression.
     None,
 }
 
@@ -52,12 +56,12 @@ pub struct Chunk<'a> {
 
 impl<'a> Chunk<'a> {
     /// Get iterator over only messages
-    pub fn iter_msgs(&self) -> ChunkMessagesIterator {
+    pub fn iter_msgs(&self) -> ChunkMessagesIterator<'_> {
         ChunkMessagesIterator::new(&self.data)
     }
 
     /// Get iterator over all internall records.
-    pub fn iter(&self) -> ChunkRecordsIterator {
+    pub fn iter(&self) -> ChunkRecordsIterator<'_> {
         ChunkRecordsIterator::new(&self.data)
     }
 }

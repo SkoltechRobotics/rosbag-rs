@@ -5,11 +5,17 @@ use std::fmt;
 /// The error type for ROS bag file reading and parsing.
 #[derive(Debug)]
 pub enum Error {
+    /// Invalid headed.
     InvalidHeader,
+    /// Invalid record.
     InvalidRecord,
+    /// Encountered unsupported version in record.
     UnsupportedVersion,
+    /// Tried to access outside of rosbag file.
     OutOfBounds,
+    /// Bzip2 decompression failure.
     Bzip2DecompressionError(String),
+    /// Lz4 decompression failure.
     Lz4DecompressionError(String),
 }
 

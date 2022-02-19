@@ -24,7 +24,7 @@ pub(crate) struct BagHeaderHeader {
 impl<'a> RecordGen<'a> for BagHeader {
     type Header = BagHeaderHeader;
 
-    fn read_data(c: &mut Cursor, header: Self::Header) -> Result<Self> {
+    fn read_data(c: &mut Cursor<'_>, header: Self::Header) -> Result<Self> {
         let index_pos = header.index_pos.ok_or(Error::InvalidHeader)?;
         let conn_count = header.conn_count.ok_or(Error::InvalidHeader)?;
         let chunk_count = header.chunk_count.ok_or(Error::InvalidHeader)?;
