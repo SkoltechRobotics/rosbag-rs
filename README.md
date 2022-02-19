@@ -1,4 +1,9 @@
-# rosbag-rs [![crates.io](https://img.shields.io/crates/v/rosbag.svg)](https://crates.io/crates/rosbag) [![Documentation](https://docs.rs/rosbag/badge.svg)](https://docs.rs/rosbag) [![Build Status](https://travis-ci.org/SkoltechRobotics/rosbag-rs.svg?branch=master)](https://travis-ci.org/SkoltechRobotics/rosbag-rs) [![dependency status](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs/status.svg)](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs)
+# rosbag-rs
+
+[![crates.io](https://img.shields.io/crates/v/rosbag.svg)](https://crates.io/crates/rosbag)
+[![Documentation](https://docs.rs/rosbag/badge.svg)](https://docs.rs/rosbag)
+[![Build Status](https://travis-ci.org/SkoltechRobotics/rosbag-rs.svg?branch=master)](https://travis-ci.org/SkoltechRobotics/rosbag-rs)
+[![dependency status](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs/status.svg)](https://deps.rs/repo/github/SkoltechRobotics/rosbag-rs)
 
 A pure Rust crate for reading ROS bag files.
 

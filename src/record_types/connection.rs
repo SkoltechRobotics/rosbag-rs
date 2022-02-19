@@ -1,7 +1,6 @@
 use super::utils::{check_op, read_record, unknown_field};
 use super::utils::{set_field_str, set_field_u32};
 use super::{Error, HeaderGen, RecordGen, Result};
-use hex::FromHex;
 use log::warn;
 
 use crate::cursor::Cursor;
@@ -59,10 +58,12 @@ impl<'a> RecordGen<'a> for Connection<'a> {
                 "topic" => set_field_str(&mut topic, val)?,
                 "type" => set_field_str(&mut tp, val)?,
                 "md5sum" => {
-                    if md5sum.is_some() {
+                    if md5sum.is_some() || val.len() != 32 {
                         return Err(Error::InvalidRecord);
                     }
-                    md5sum = Some(<[u8; 16]>::from_hex(val).map_err(|_| Error::InvalidRecord)?);
+                    let mut res = [0u8; 16];
+                    base16ct::lower::decode(val, &mut res).map_err(|_| Error::InvalidRecord)?;
+                    md5sum = Some(res);
                 }
                 "callerid" => set_field_str(&mut caller_id, val)?,
                 "latching" => {

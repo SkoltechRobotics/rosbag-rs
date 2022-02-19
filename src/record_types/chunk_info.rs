@@ -19,6 +19,7 @@ pub struct ChunkInfo<'a> {
 }
 
 impl<'a> ChunkInfo<'a> {
+    /// Get entries iterator.
     pub fn entries(&'a self) -> ChunkInfoEntriesIterator<'a> {
         ChunkInfoEntriesIterator {
             cursor: Cursor::new(self.data),

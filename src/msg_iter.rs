@@ -6,10 +6,12 @@ use crate::record_types::{Connection, HeaderGen, MessageData, RecordGen};
 
 use crate::cursor::Cursor;
 
-/// Record types which can be stored in the `Chunk`
+/// Record types which can be stored in [`Chunk`][crate::record_types::Chunk]
 #[derive(Debug, Clone)]
 pub enum ChunkRecord<'a> {
+    /// [`MessageData`] record.
     MessageData(MessageData<'a>),
+    /// [`Connection`] record.
     Connection(Connection<'a>),
 }
 
@@ -35,7 +37,7 @@ impl<'a> ChunkRecord<'a> {
 }
 
 /// Iterator which iterates over records stored in the
-/// [`Chunk`](../record_types/struct.Chunk.html).
+/// [`Chunk`][crate::record_types::Chunk].
 pub struct ChunkRecordsIterator<'a> {
     cursor: Cursor<'a>,
 }
@@ -80,7 +82,7 @@ impl<'a> Iterator for ChunkRecordsIterator<'a> {
 }
 
 /// Iterator which iterates over `MessageData` records stored in the
-/// [`Chunk`](../record_types/struct.Chunk.html).
+/// [`Chunk`][crate::record_types::Chunk].
 ///
 /// It ignores `Connection` records.
 pub struct ChunkMessagesIterator<'a> {

@@ -10,11 +10,17 @@ use crate::record_types::{
 /// Enum with all possible record variants
 #[derive(Debug, Clone)]
 pub enum Record<'a> {
+    /// [`BagHeader`] record.
     BagHeader(BagHeader),
+    /// [`Chunk`] record.
     Chunk(Chunk<'a>),
+    /// [`Connection`] record.
     Connection(Connection<'a>),
+    /// [`MessageData`] record.
     MessageData(MessageData<'a>),
+    /// [`IndexData`] record.
     IndexData(IndexData<'a>),
+    /// [`ChunkInfo`] record.
     ChunkInfo(ChunkInfo<'a>),
 }
 
@@ -43,6 +49,7 @@ impl<'a> Record<'a> {
         })
     }
 
+    /// Get string name of the stored recrod type.
     pub fn get_type(&self) -> &'static str {
         match self {
             Record::BagHeader(_) => "BagHeader",

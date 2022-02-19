@@ -30,6 +30,9 @@
 //!     println!("{:?}", record?);
 //! }
 //! ```
+#![doc(html_root_url = "https://docs.rs/rosbag/0.4.0")]
+#![warn(missing_docs, rust_2018_idioms)]
+
 use std::fs::File;
 use std::io::{self, Read};
 use std::iter::Iterator;
@@ -75,6 +78,7 @@ impl RosBag {
         Ok(Self { data })
     }
 
+    /// Get iterator over records.
     pub fn records(&self) -> RecordsIterator<'_> {
         let mut cursor = Cursor::new(&self.data);
         cursor
