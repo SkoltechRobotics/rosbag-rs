@@ -3,8 +3,6 @@ use super::{Error, Result};
 
 use crate::cursor::Cursor;
 
-mod bag_header;
-pub use self::bag_header::BagHeader;
 mod chunk;
 pub use self::chunk::{Chunk, Compression};
 pub(crate) mod message_data;

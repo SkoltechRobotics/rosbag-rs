@@ -3,7 +3,7 @@ use super::{Error, HeaderGen, RecordGen, Result};
 use std::borrow::Cow;
 
 use crate::cursor::Cursor;
-use crate::msg_iter::{ChunkMessagesIterator, ChunkRecordsIterator};
+use crate::msg_iter::MessageRecordsIterator;
 
 /// Compression options for `Chunk` data.
 #[derive(Debug, Clone, Copy)]
@@ -56,13 +56,8 @@ pub struct Chunk<'a> {
 
 impl<'a> Chunk<'a> {
     /// Get iterator over only messages
-    pub fn iter_msgs(&self) -> ChunkMessagesIterator<'_> {
-        ChunkMessagesIterator::new(&self.data)
-    }
-
-    /// Get iterator over all internall records.
-    pub fn iter(&self) -> ChunkRecordsIterator<'_> {
-        ChunkRecordsIterator::new(&self.data)
+    pub fn messages(&self) -> MessageRecordsIterator<'_> {
+        MessageRecordsIterator::new(&self.data)
     }
 }
 

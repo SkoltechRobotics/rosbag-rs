@@ -2,120 +2,195 @@
 //!
 //! # Example
 //! ```
-//! use rosbag::{RosBag, Record};
+//! use rosbag::{ChunkRecord, MessageRecord, IndexRecord, RosBag};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # let path = "dummy.bag";
 //! let bag = RosBag::new(path)?;
-//! // create low-level iterator over rosbag records
-//! let mut records = bag.records();
-//! // acquire `BagHeader` record, which should be the first one
-//! let header = match records.next() {
-//!     Some(Ok(Record::BagHeader(bh))) => bh,
-//!     _ => panic!("Failed to acquire bag header record"),
-//! };
-//! // get first `Chunk` record and iterate over `Message` records in it
-//! for record in &mut records {
+//! // Iterate over records in the chunk section
+//! for record in bag.chunk_records() {
 //!     match record? {
-//!         Record::Chunk(chunk) => {
-//!             for msg in chunk.iter_msgs() {
-//!                 // process messages
+//!         ChunkRecord::Chunk(chunk) => {
+//!             // iterate over messages in the chunk
+//!             for msg in chunk.messages() {
+//!                 match msg? {
+//!                     MessageRecord::MessageData(msg_data) => {
+//!                         // ..
+//!                         # drop(msg_data);
+//!                     }
+//!                     MessageRecord::Connection(conn) => {
+//!                         // ..
+//!                         # drop(conn);
+//!                     }
+//!                 }
 //!             }
 //!         },
-//!         _ => (),
+//!         ChunkRecord::IndexData(index_data) => {
+//!             // ..
+//!             # drop(index_data);
+//!         },
 //!     }
 //! }
-//! // jump to index records
-//! records.seek(header.index_pos).unwrap();
-//! for record in records {
-//!     // process index records
+//! // Iterate over records in the index section
+//! for record in bag.index_records() {
+//!     match record? {
+//!         IndexRecord::IndexData(index_data) => {
+//!             // ..
+//!             # drop(index_data);
+//!         }
+//!         IndexRecord::Connection(conn) => {
+//!             // ..
+//!             # drop(conn);
+//!         }
+//!         IndexRecord::ChunkInfo(chunk_info) => {
+//!             // ..
+//!             # drop(chunk_info);
+//!         }
+//!     }
 //! }
 //! # Ok(()) }
 //! ```
-#![doc(html_root_url = "https://docs.rs/rosbag/0.4.0")]
+#![doc(html_root_url = "https://docs.rs/rosbag/0.5.0")]
 #![warn(missing_docs, rust_2018_idioms)]
 
-use std::fs::File;
-use std::io::{self, Read};
-use std::iter::Iterator;
-use std::path::Path;
-use std::{result, str};
-
 use memmap2::Mmap;
+use std::{fs, io, path::Path, result, str};
 
 const VERSION_STRING: &str = "#ROSBAG V2.0\n";
+const VERSION_LEN: u64 = VERSION_STRING.len() as u64;
+const ROSBAG_HEADER_OP: u8 = 0x03;
 
 mod cursor;
 mod error;
 mod field_iter;
-pub mod msg_iter;
 mod record;
+
+mod chunk_iter;
+mod index_iter;
+mod msg_iter;
 pub mod record_types;
 
 use cursor::Cursor;
-pub use error::Error;
-pub use record::Record;
+use field_iter::FieldIterator;
+use record_types::utils::{check_op, set_field_u32, set_field_u64};
 
-/// Struct which holds open rosbag file.
+pub use chunk_iter::{ChunkRecord, ChunkRecordsIterator};
+pub use error::Error;
+pub use index_iter::{IndexRecord, IndexRecordsIterator};
+pub use msg_iter::{MessageRecord, MessageRecordsIterator};
+
+/// Open rosbag file.
 pub struct RosBag {
     data: Mmap,
+    start_pos: usize,
+    index_pos: usize,
+    conn_count: u32,
+    chunk_count: u32,
 }
 
 /// A specialized Result type for ROS bag file reading and parsing.
 pub type Result<T> = result::Result<T, Error>;
 
+/// Bag file header record which contains basic information about the file.
+#[derive(Debug, Clone)]
+struct BagHeader {
+    /// Offset of first record after the chunk section
+    index_pos: u64,
+    /// Number of unique connections in the file
+    conn_count: u32,
+    /// Number of chunk records in the file
+    chunk_count: u32,
+}
+
+fn parse_bag_header(data: &[u8]) -> Result<(u64, BagHeader)> {
+    let mut cursor = Cursor::new(data);
+
+    if cursor.next_bytes(VERSION_LEN)? != VERSION_STRING.as_bytes() {
+        return Err(Error::InvalidHeader);
+    }
+
+    let header = cursor.next_chunk()?;
+
+    let mut index_pos: Option<u64> = None;
+    let mut conn_count: Option<u32> = None;
+    let mut chunk_count: Option<u32> = None;
+    let mut op: bool = false;
+
+    for item in FieldIterator::new(header) {
+        let (name, val) = item?;
+        match name {
+            "op" => {
+                check_op(val, ROSBAG_HEADER_OP)?;
+                op = true;
+            }
+            "index_pos" => set_field_u64(&mut index_pos, val)?,
+            "conn_count" => set_field_u32(&mut conn_count, val)?,
+            "chunk_count" => set_field_u32(&mut chunk_count, val)?,
+            _ => log::warn!("unexpected field in bag header: {}", name),
+        }
+    }
+
+    let bag_header = match (index_pos, conn_count, chunk_count, op) {
+        (Some(index_pos), Some(conn_count), Some(chunk_count), true) => BagHeader {
+            index_pos,
+            conn_count,
+            chunk_count,
+        },
+        _ => return Err(Error::InvalidHeader),
+    };
+
+    // jump over header data
+    let _ = cursor.next_chunk()?;
+
+    Ok((cursor.pos(), bag_header))
+}
+
 impl RosBag {
     /// Create a new iterator over provided path to ROS bag file.
     pub fn new<P: AsRef<Path>>(path: P) -> io::Result<Self> {
-        let mut file = File::open(path)?;
-        let mut buf = [0u8; 13];
-        file.read_exact(&mut buf)?;
-        if buf != VERSION_STRING.as_bytes() {
-            return Err(io::Error::new(
+        let data = unsafe { Mmap::map(&fs::File::open(path)?)? };
+
+        let (start_pos, header) = parse_bag_header(&data).map_err(|_| {
+            io::Error::new(
                 io::ErrorKind::InvalidData,
                 "Invalid or unsupported rosbag header",
-            ));
+            )
+        })?;
+
+        Ok(Self {
+            data,
+            start_pos: start_pos.try_into().unwrap(),
+            conn_count: header.conn_count,
+            index_pos: header.index_pos.try_into().unwrap(),
+            chunk_count: header.chunk_count,
+        })
+    }
+
+    /// Get connection count in this rosbag file.
+    pub fn get_conn_count(&self) -> u32 {
+        self.conn_count
+    }
+
+    /// Get chunk count in this rosbag file.
+    pub fn get_chunk_count(&self) -> u32 {
+        self.chunk_count
+    }
+
+    /// Get iterator over records in the chunk section.
+    pub fn chunk_records(&self) -> ChunkRecordsIterator<'_> {
+        let cursor = Cursor::new(&self.data[self.start_pos..self.index_pos]);
+        ChunkRecordsIterator {
+            cursor,
+            offset: self.start_pos as u64,
         }
-        let data = unsafe { Mmap::map(&file)? };
-        Ok(Self { data })
     }
 
-    /// Get iterator over records.
-    pub fn records(&self) -> RecordsIterator<'_> {
-        let mut cursor = Cursor::new(&self.data);
-        cursor
-            .seek(VERSION_STRING.len() as u64)
-            .expect("data header is checked on initialization");
-        RecordsIterator { cursor }
-    }
-}
-
-/// Low-level iterator over records extracted from ROS bag file.
-pub struct RecordsIterator<'a> {
-    cursor: Cursor<'a>,
-}
-
-impl<'a> RecordsIterator<'a> {
-    /// Jump to the given position in the file.
-    ///
-    /// Be carefull to jump only to record beginnings (e.g. to position listed
-    /// in `BagHeader` or `ChunkInfo` records), as incorrect offset position
-    /// will result in error on the next iteration and in the worst case
-    /// scenario to a long blocking (programm will try to read a huge chunk of
-    /// data).
-    pub fn seek(&mut self, pos: u64) -> Result<()> {
-        Ok(self.cursor.seek(pos)?)
-    }
-}
-
-impl<'a> Iterator for RecordsIterator<'a> {
-    type Item = Result<Record<'a>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        println!("{:?}", self.cursor.left());
-        if self.cursor.left() == 0 {
-            return None;
+    /// Get iterator over records in the index section.
+    pub fn index_records(&self) -> IndexRecordsIterator<'_> {
+        let cursor = Cursor::new(&self.data[self.index_pos..]);
+        IndexRecordsIterator {
+            cursor,
+            offset: self.index_pos as u64,
         }
-        Some(Record::next_record(&mut self.cursor))
     }
 }
