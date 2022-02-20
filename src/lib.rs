@@ -103,7 +103,7 @@ struct BagHeader {
 }
 
 fn parse_bag_header(data: &[u8]) -> Result<(u64, BagHeader)> {
-    let mut cursor = Cursor::new(&data);
+    let mut cursor = Cursor::new(data);
 
     if cursor.next_bytes(VERSION_LEN)? != VERSION_STRING.as_bytes() {
         return Err(Error::InvalidHeader);
