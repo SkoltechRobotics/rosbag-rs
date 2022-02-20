@@ -36,11 +36,11 @@ pub(crate) fn read_record(mut header: &[u8]) -> Result<(&str, &[u8], &[u8])> {
     Ok((name, val, header))
 }
 
-pub(super) fn unknown_field(name: &str, val: &[u8]) {
+pub(crate) fn unknown_field(name: &str, val: &[u8]) {
     log::warn!("Unknown header field: {}={:?}", name, val);
 }
 
-pub(super) fn check_op(val: &[u8], op: u8) -> Result<()> {
+pub(crate) fn check_op(val: &[u8], op: u8) -> Result<()> {
     if val.len() == 1 && val[0] == op {
         Ok(())
     } else {
@@ -48,7 +48,7 @@ pub(super) fn check_op(val: &[u8], op: u8) -> Result<()> {
     }
 }
 
-pub(super) fn set_field_u64(field: &mut Option<u64>, val: &[u8]) -> Result<()> {
+pub(crate) fn set_field_u64(field: &mut Option<u64>, val: &[u8]) -> Result<()> {
     if val.len() != 8 || field.is_some() {
         Err(Error::InvalidHeader)
     } else {
@@ -57,7 +57,7 @@ pub(super) fn set_field_u64(field: &mut Option<u64>, val: &[u8]) -> Result<()> {
     }
 }
 
-pub(super) fn set_field_u32(field: &mut Option<u32>, val: &[u8]) -> Result<()> {
+pub(crate) fn set_field_u32(field: &mut Option<u32>, val: &[u8]) -> Result<()> {
     if val.len() != 4 || field.is_some() {
         Err(Error::InvalidHeader)
     } else {
@@ -74,7 +74,7 @@ pub(crate) fn set_field_str<'a>(field: &mut Option<&'a str>, val: &'a [u8]) -> R
     Ok(())
 }
 
-pub(super) fn set_field_time(field: &mut Option<u64>, val: &[u8]) -> Result<()> {
+pub(crate) fn set_field_time(field: &mut Option<u64>, val: &[u8]) -> Result<()> {
     if val.len() != 8 || field.is_some() {
         return Err(Error::InvalidHeader);
     }
