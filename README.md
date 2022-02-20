@@ -11,32 +11,43 @@ A pure Rust crate for reading ROS bag files.
 
 ## Example
 ```rust
-use rosbag::{RosBag, Record};
+use rosbag::{ChunkRecord, MessageRecord, IndexRecord, RosBag};
 
-let bag = RosBag::new(path).unwrap();
-// create low-level iterator over rosbag records
-let mut records = bag.records();
-// acquire `BagHeader` record, which should be first one
-let header = match records.next() {
-    Some(Ok(Record::BagHeader(bh))) => bh,
-    _ => panic!("Failed to acquire bag header record"),
-};
-// get first `Chunk` record and iterate over `Message` records in it
-for record in &mut records {
+let bag = RosBag::new(path)?;
+// Iterate over records in the chunk section
+for record in bag.chunk_records() {
     match record? {
-        Record::Chunk(chunk) => {
-            for msg in chunk.iter_msgs() {
-                println!("{}", msg?.time)
+        ChunkRecord::Chunk(chunk) => {
+            // iterate over messages in the chunk
+            for msg in chunk.messages() {
+                match msg? {
+                    MessageRecord::MessageData(msg_data) => {
+                        // ..
+                    }
+                    MessageRecord::Connection(conn) => {
+                        // ..
+                    }
+                }
             }
-            break;
         },
-        _ => (),
+        ChunkRecord::IndexData(index_data) => {
+            // ..
+        },
     }
 }
-// jump to index records
-records.seek(header.index_pos).unwrap();
-for record in records {
-    println!("{:?}", record?);
+// Iterate over records in the index section
+for record in bag.index_records() {
+    match record? {
+        IndexRecord::IndexData(index_data) => {
+            // ..
+        }
+        IndexRecord::Connection(conn) => {
+            // ..
+        }
+        IndexRecord::ChunkInfo(chunk_info) => {
+            // ..
+        }
+    }
 }
 ```
 
