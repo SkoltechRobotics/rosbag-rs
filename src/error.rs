@@ -39,11 +39,11 @@ impl fmt::Display for Error {
             InvalidRecord => "invalid record".to_string(),
             UnsupportedVersion => "unsupported version".to_string(),
             OutOfBounds => "out of bounds".to_string(),
-            UnexpectedChunkSectionRecord(t) => format!("unexpected {t} in the chunk section"),
-            UnexpectedIndexSectionRecord(t) => format!("unexpected {t} in the index section"),
-            UnexpectedMessageRecord(t) => format!("unexpected {t} in chunk payload"),
-            Bzip2DecompressionError(es) => format!("bzip2 decompression error: {es}"),
-            Lz4DecompressionError(es) => format!("LZ4 decompression error: {es}"),
+            UnexpectedChunkSectionRecord(t) => format!("unexpected {} in the chunk section", t),
+            UnexpectedIndexSectionRecord(t) => format!("unexpected {} in the index section", t),
+            UnexpectedMessageRecord(t) => format!("unexpected {} in chunk payload", t),
+            Bzip2DecompressionError(e) => format!("bzip2 decompression error: {}", e),
+            Lz4DecompressionError(e) => format!("LZ4 decompression error: {}", e),
         };
         write!(f, "rosbag::Error: {}", s)
     }
