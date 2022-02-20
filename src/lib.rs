@@ -16,18 +16,18 @@
 //!                 match msg? {
 //!                     MessageRecord::MessageData(msg_data) => {
 //!                         // ..
-//!                         # println!("{msg_data:?}");
+//!                         # drop(msg_data);
 //!                     }
 //!                     MessageRecord::Connection(conn) => {
 //!                         // ..
-//!                         # println!("{conn:?}");
+//!                         # drop(conn);
 //!                     }
 //!                 }
 //!             }
 //!         },
 //!         ChunkRecord::IndexData(index_data) => {
 //!             // ..
-//!             # println!("{index_data:?}");
+//!             # drop(index_data);
 //!         },
 //!     }
 //! }
@@ -36,15 +36,15 @@
 //!     match record? {
 //!         IndexRecord::IndexData(index_data) => {
 //!             // ..
-//!             # println!("{index_data:?}");
+//!             # drop(index_data);
 //!         }
 //!         IndexRecord::Connection(conn) => {
 //!             // ..
-//!             # println!("{conn:?}");
+//!             # drop(conn);
 //!         }
 //!         IndexRecord::ChunkInfo(chunk_info) => {
 //!             // ..
-//!             # println!("{chunk_info:?}");
+//!             # drop(chunk_info);
 //!         }
 //!     }
 //! }
