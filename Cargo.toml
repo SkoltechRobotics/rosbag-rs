@@ -1,6 +1,6 @@
 [package]
 name = "rosbag"
-version = "0.5.0" # Also update html_root_url in lib.rs when bumping this
+version = "0.6.0" # Also update html_root_url in lib.rs when bumping this
 description = "Utilities for reading ROS bag files."
 authors = ["Artyom Pavlov <newpavlov@gmail.com>"]
 license = "MIT OR Apache-2.0"
